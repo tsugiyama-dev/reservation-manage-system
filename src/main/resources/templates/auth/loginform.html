@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+
+	<p th:if="${message != null}" th:text="${message}"></p>
+	<form th:action="@{/login}" method="post">
+		<div>
+			<label>ユーザー名</label>
+			<input type="test" name="username">
+		</div>
+		<div>
+			<label>パスワード</label>
+            <input type="password" name="password">
+		</div>
+		<div>
+			<button>login</button>
+		</div>
+	</form>
+	<p>会員登録がまだの方は<a th:href="@{/auth/register}">こちら</a></p>
+	
+</body>
+</html>

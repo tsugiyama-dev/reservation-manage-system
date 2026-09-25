@@ -1,0 +1,8 @@
+HELP.md
+target/
+build/
+log/**/*.log
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+
