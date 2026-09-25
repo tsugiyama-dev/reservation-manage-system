@@ -15,7 +15,7 @@ env:
 
 jobs:
   build-and-push:
-    runs-on: Ubuntu 22.04
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout source
