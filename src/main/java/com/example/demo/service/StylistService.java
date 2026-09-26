@@ -1,5 +1,6 @@
 package com.example.demo.service;
 
+import java.util.List;
 import java.util.NoSuchElementException;
 
 import org.springframework.context.ApplicationEventPublisher;
@@ -77,6 +78,11 @@ public class StylistService {
 		
 		eventPublisher.publishEvent(reservation);
 		
+	}
+
+	public List<Reservation> getList(Status status) {
+		reservationRepository.findByReservationId(null);
+		return null;
 	}
 
 }

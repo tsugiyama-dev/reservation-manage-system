@@ -3,8 +3,10 @@ package com.example.demo.service;
 import java.util.NoSuchElementException;
 
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
+import com.example.demo.domain.Role;
 import com.example.demo.domain.dto.Id;
 import com.example.demo.domain.entity.User;
 import com.example.demo.repository.UserRepository;
@@ -27,7 +29,14 @@ public class AuthenticationService {
 		}
 		
 		return true;
-		
-		
+	}
+	
+	public static boolean isAdmin(Authentication auth) {
+		return auth.getPrincipal() != null 
+				&& ((String)auth.getPrincipal()).equals(Role.ADMIN.name());
+	}
+	public static boolean isStylist(Authentication auth) {
+		return auth.getPrincipal() != null 
+				&& ((String)auth.getPrincipal()).equals(Role.STYLIST.name());
 	}
 }

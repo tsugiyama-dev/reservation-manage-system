@@ -11,10 +11,11 @@ import org.springframework.stereotype.Service;
 
 import com.example.demo.domain.dto.BusinessHour;
 import com.example.demo.domain.dto.Id;
-import com.example.demo.domain.dto.StylistMenu;
+import com.example.demo.domain.dto.StylistOriginalMenu;
 import com.example.demo.domain.entity.Menu;
 import com.example.demo.domain.entity.Reservation;
 import com.example.demo.domain.entity.Stylist;
+import com.example.demo.domain.entity.StylistMenu;
 import com.example.demo.repository.BusinessHourRepository;
 import com.example.demo.repository.MenuRepository;
 import com.example.demo.repository.ReservationRepository;
@@ -28,22 +29,27 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor
 public class StylistMenuService {
 
-	StylistMenuRepository stylistMenuRepository;
-	MenuRepository menuRepository;
-	ReservationRepository reservationRepository;
-	BusinessHourRepository businessHourRepository;
+	private StylistMenuRepository stylistMenuRepository;
+	private MenuRepository menuRepository;
+	private ReservationRepository reservationRepository;
+	private BusinessHourRepository businessHourRepository;
 	
-	public void assignMenu(long stylistId, long menuId) {
+	public void assignMenu(long stylistId, long menuId, StylistOriginalMenu original) {
 		Id<Menu> id = new Id<>(menuId);
 		Menu m = menuRepository.findById(id).orElseThrow(
 				() -> {
 					throw new IllegalArgumentException("メニューが存在しません。[id=" + menuId + "]");
 				});
 		stylistMenuRepository.insert(
-				stylistId,
-				menuId,
-				m.getBaseDurationMinutes(),
-				m.getBasePrice());
+				new StylistMenu(
+						stylistId,
+						menuId,
+						original.duration_minutes() != null ?
+								original.duration_minutes() :
+									m.getBaseDurationMinutes(),
+						original.price() != null ?
+								original.price() :
+									m.getBasePrice()));
 	}
 
 	public List<Menu> getMenuForStylist(long id) {
@@ -72,7 +78,7 @@ public class StylistMenuService {
 				                   LocalTime.parse(businessHour.endTime())));
 		
 		// 予約一覧を取り出す
-		Id<StylistMenu> id = new Id<>(stylistId);
+		Id<StylistOriginalMenu> id = new Id<>(stylistId);
 		List<Reservation> reservations = reservationRepository.findByStylistId(
 				id,
 				day.atTime(LocalTime.parse(businessHour.startTime())),
@@ -100,7 +106,6 @@ public class StylistMenuService {
 			}
 		}
 		return candidate;
-//		return freeSlot;
 	}
 	
 	private List<TimeRange> subtract(List<TimeRange> freeSlot,  TimeRange reserve) {
@@ -146,9 +151,7 @@ public class StylistMenuService {
 			if(!isOk) {
 				candidate.add(free);
 			}
-			
 		}
-		
 		return candidate;
 	}
 }

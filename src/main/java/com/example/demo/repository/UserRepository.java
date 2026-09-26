@@ -14,13 +14,12 @@ import org.apache.ibatis.annotations.Results;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
-import com.example.demo.Repository;
 import com.example.demo.domain.dto.Id;
 import com.example.demo.domain.dto.UserForm;
 import com.example.demo.domain.entity.User;
 
 @Mapper
-public interface UserRepository extends Repository<UserForm, Long, User> {
+public interface UserRepository {
 
 	@Options(useGeneratedKeys = true, keyProperty = "id")
 	@Insert("""
@@ -53,9 +52,7 @@ public interface UserRepository extends Repository<UserForm, Long, User> {
 	List<User> findByRole(String role);
 	
 	@ResultMap(value = "userResultMap")
-	@Select("""
-			SELECT id, name, email, role FROM users WHERE id = #{id}
-			""")
+	@Select("SELECT id, name, email, role FROM users WHERE id = #{id}")
 	Optional<User> findById(Id<User> uid);
 	
 	

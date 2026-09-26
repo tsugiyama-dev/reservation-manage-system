@@ -1,5 +1,8 @@
 package com.example.demo.repository;
 
+import java.util.Optional;
+
+import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
@@ -22,5 +25,11 @@ public interface StylistRepository {
 		        (#{userId}, #{bio})
 			""")
 	void insert(long userId, String bio);
+	
+	@Select("SELECT id FROM stylists WHERE user_id = #{id}")
+	Optional<Stylist> findById(Id<Stylist> id);
+
+	@Delete("DELETE FROM stylists WHERE user_id = #{id}")
+	void delete(Id<Stylist> id);
 
 }

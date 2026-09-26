@@ -14,7 +14,7 @@ import org.apache.ibatis.annotations.Update;
 
 import com.example.demo.domain.Status;
 import com.example.demo.domain.dto.Id;
-import com.example.demo.domain.dto.StylistMenu;
+import com.example.demo.domain.dto.StylistOriginalMenu;
 import com.example.demo.domain.entity.Menu;
 import com.example.demo.domain.entity.Reservation;
 import com.example.demo.domain.entity.Stylist;
@@ -49,7 +49,7 @@ public interface ReservationRepository {
 			      status IN ('PENDING', 'CONFIRMED')
 		    ORDER BY start_time ASC
 			""")
-	List<Reservation> findByStylistId(Id<StylistMenu> id, LocalDateTime startTime, LocalDateTime endTime);
+	List<Reservation> findByStylistId(Id<StylistOriginalMenu> id, LocalDateTime startTime, LocalDateTime endTime);
 
 	@Insert("""
 			INSERT INTO reservations (

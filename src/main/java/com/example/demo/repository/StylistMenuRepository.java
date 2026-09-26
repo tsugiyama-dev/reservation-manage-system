@@ -12,6 +12,7 @@ import org.apache.ibatis.annotations.Select;
 import com.example.demo.domain.dto.Id;
 import com.example.demo.domain.entity.Menu;
 import com.example.demo.domain.entity.Stylist;
+import com.example.demo.domain.entity.StylistMenu;
 
 @Mapper
 public interface StylistMenuRepository {
@@ -31,7 +32,7 @@ public interface StylistMenuRepository {
 			  duration_minutes = VALUES(duration_minutes),
 			  price = VALUES(price)
 			""")
-	void insert(long stylistId, long menuId, int durationMinutes, int price);
+	void insert(StylistMenu menu);
 
 	@Results(id = "menuResultMap", value = {
 			@Result(property = "id", column = "menu_id"),

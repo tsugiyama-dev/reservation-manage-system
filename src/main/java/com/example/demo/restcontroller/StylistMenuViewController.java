@@ -28,7 +28,8 @@ public class StylistMenuViewController {
     
     Role STYLIST = Role.STYLIST;
 	
-	public StylistMenuViewController(UserService userService, StylistMenuService stylistService) {
+	public StylistMenuViewController(UserService userService,
+			StylistMenuService stylistService) {
 		this.userService = userService;
 		this.stylistService = stylistService;
 	}

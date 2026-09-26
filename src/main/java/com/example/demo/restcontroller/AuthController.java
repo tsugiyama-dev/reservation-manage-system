@@ -13,7 +13,7 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 @RestController
 @RequestMapping("/auth")
-public class AuthRestController {
+public class AuthController {
 
 	UserService userService;
 	

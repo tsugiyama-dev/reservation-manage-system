@@ -5,11 +5,14 @@ import java.util.List;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.demo.NotFoundUserException;
 import com.example.demo.config.TokenGenerator;
 import com.example.demo.domain.Role;
+import com.example.demo.domain.dto.Id;
 import com.example.demo.domain.dto.UserForm;
+import com.example.demo.domain.entity.Stylist;
 import com.example.demo.domain.entity.User;
 import com.example.demo.repository.StylistRepository;
 import com.example.demo.repository.UserRepository;
@@ -28,6 +31,7 @@ public class UserService {
     TokenGenerator tokenGenerator;
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     
+    @Transactional
 	public void registerUser(UserForm form) {
 		
 	    String encoded = passwordEncoder(form.password());
@@ -41,7 +45,8 @@ public class UserService {
 		userRepository.insert(user);
 		
 		if(form.role().equals(Role.STYLIST)) {
-			stylistRepository.insert(user.getId(), encoded);
+			stylistRepository.insert(user.getId(),
+					form.bio() != null ? form.bio() : null);
 		}
 	}	
 	
@@ -69,5 +74,16 @@ public class UserService {
 	
 	private String passwordEncoder(String password) {
 		return passwordEncoder.encode(password);
+	}
+
+	@Transactional
+	public void delete(long id) {
+		
+		stylistRepository.findById(new Id<Stylist>(id)).orElseThrow(() -> {
+			throw new IllegalArgumentException("指定されたスタイリストは登録されていません: Id=" + id);
+		});
+		stylistRepository.delete(new Id<Stylist>(id));
+		userRepository.delete(id);
+		
 	}
 }

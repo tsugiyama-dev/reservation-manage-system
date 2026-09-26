@@ -53,7 +53,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
 					UsernamePasswordAuthenticationToken.authenticated(email, null, List.of(new SimpleGrantedAuthority("ROLE_" + role))));
 			log.info("トークンの検証に成功しました:[email={},role={}]", email, role);
 		}catch(JwtException e) {
-			log.info("トークンの検証に失敗しました");
+			log.info("トークンの検証に失敗:[{}]", e.getMessage());
 		}
 		filterChain.doFilter(request, response);
 	}
