@@ -33,7 +33,7 @@ public interface StylistRepository {
 	void delete(Id<Stylist> id);
 	
 	@Select("""
-			SELECT u.id, u.name, u.emai, s.bio
+			SELECT u.id, u.name, u.email, s.bio
 			FROM stylists s
 			LEFT JOIN users u
 			  ON u.id = s.user_id
