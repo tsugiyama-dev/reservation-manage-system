@@ -20,7 +20,7 @@ public class AuthController {
 	@PostMapping("/login")
 	public String login(@RequestBody LoginForm form) {
 	
-		String token = userService.findUser(form.username(), form.password());	
+		String token = userService.findUser(form.email(), form.password());	
 		return token;
 	}
 	

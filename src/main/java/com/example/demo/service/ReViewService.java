@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import com.example.demo.domain.Status;
@@ -29,17 +28,10 @@ public class ReViewService {
 	public void post(String email, ReviewPostForm form, long reservationId) {
 		
 		Id<Reservation> rid = new Id<>(reservationId);
-		Reservation reservation = reservationRepository.findByReservationId(rid).orElseThrow(() -> {
+		Reservation reservation = reservationRepository.findByRid(rid).orElseThrow(() -> {
 			throw new NoSuchElementException("予約が見つかりません");
 		});
-		
-		try {
-			authenticationService.authenticate(email, reservation.getCustomerId());
-		}catch(AccessDeniedException ex) {
-			throw new AccessDeniedException("");
-		}catch(NoSuchElementException ex) {
-			throw new NoSuchElementException("");
-		}
+		authenticationService.authenticate(email, reservation.getCustomerId());
 		
 		boolean isConfirmed = reservation.getStatus().equals(Status.CONFIRMED);
 		if(!isConfirmed) {

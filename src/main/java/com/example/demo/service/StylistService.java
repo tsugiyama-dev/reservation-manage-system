@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.demo.domain.Status;
 import com.example.demo.domain.dto.Id;
 import com.example.demo.domain.entity.Reservation;
+import com.example.demo.domain.entity.User;
 import com.example.demo.repository.ReservationRepository;
 import com.example.demo.repository.UserRepository;
 
@@ -30,7 +31,7 @@ public class StylistService {
 	@Transactional
 	public void confirm(long reservationId, String email) {
 		
-		Reservation reservation = reservationRepository.findByReservationId(new Id<Reservation>(reservationId)).orElseThrow(() -> {
+		Reservation reservation = reservationRepository.findByRid(new Id<Reservation>(reservationId)).orElseThrow(() -> {
 			throw new NoSuchElementException("指定された予約が見つかりません");
 		});
 		
@@ -56,8 +57,7 @@ public class StylistService {
 	@Transactional
 	public void reject(long reservationId, String email) {
 		
-		
-		Reservation reservation = reservationRepository.findByReservationId(new Id<Reservation>(reservationId)).orElseThrow(() -> {
+		Reservation reservation = reservationRepository.findByRid(new Id<Reservation>(reservationId)).orElseThrow(() -> {
 			throw new NoSuchElementException("指定された予約が見つかりません");
 		});
 		
@@ -80,9 +80,13 @@ public class StylistService {
 		
 	}
 
-	public List<Reservation> getList(Status status) {
-		reservationRepository.findByReservationId(null);
-		return null;
+	public List<Reservation> getList(Status status, String email) {
+		User user = userRepository.findByEmail(email).orElseThrow(() -> {
+			throw new IllegalArgumentException("見つかりません:[email=" + email + "]");
+		});
+		Id<User> uid = new Id<>(user.getId());
+		return reservationRepository.findByStatus(uid, status);
+		
 	}
 
 }

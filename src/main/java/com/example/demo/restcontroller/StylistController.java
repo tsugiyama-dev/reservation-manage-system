@@ -27,8 +27,11 @@ public class StylistController {
 	
 	@GetMapping("/me/status")
 	public List<Reservation> reservations(
-			@RequestParam Status status) {
-		return stylistService.getList(status);
+			@RequestParam Status status,
+			Authentication auth) {
+		
+		String email = (String) auth.getPrincipal();
+		return stylistService.getList(status, email);
 	}
 	
 	@PatchMapping("/{id}/confirm")

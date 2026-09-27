@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.demo.domain.Role;
 import com.example.demo.domain.entity.Menu;
-import com.example.demo.domain.entity.User;
+import com.example.demo.domain.entity.Stylist;
 import com.example.demo.service.StylistMenuService;
 import com.example.demo.service.TimeRange;
 import com.example.demo.service.UserService;
@@ -21,14 +21,14 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 @Slf4j
 @RequestMapping("/stylists")
-public class StylistMenuViewController {
+public class StylistMenuController {
 
     private final UserService userService;
     private final StylistMenuService stylistService;
     
     Role STYLIST = Role.STYLIST;
 	
-	public StylistMenuViewController(UserService userService,
+	public StylistMenuController(UserService userService,
 			StylistMenuService stylistService) {
 		this.userService = userService;
 		this.stylistService = stylistService;
@@ -36,15 +36,15 @@ public class StylistMenuViewController {
 	
 	
 	@GetMapping
-	public List<User> list() {
-		return userService.findUser(STYLIST.name());
+	public List<Stylist> list() {
+		return userService.findUser();
 	}
 	
 	@GetMapping("/{id}/menus")
-	public List<Menu> everyStylistMenuList(
+	public List<Menu> stylistMenuList(
 			@PathVariable long id) {
 
-		return stylistService.getMenuForStylist(id);
+		return stylistService.getMenuByStylist(id);
 		
 	}
 	

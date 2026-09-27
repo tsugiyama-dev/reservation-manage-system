@@ -14,7 +14,6 @@ import org.apache.ibatis.annotations.Update;
 
 import com.example.demo.domain.Status;
 import com.example.demo.domain.dto.Id;
-import com.example.demo.domain.dto.StylistOriginalMenu;
 import com.example.demo.domain.entity.Menu;
 import com.example.demo.domain.entity.Reservation;
 import com.example.demo.domain.entity.Stylist;
@@ -43,13 +42,16 @@ public interface ReservationRepository {
 			       end_time,
 			       status
 			FROM reservations
-			WHERE stylist_id = #{id.id} AND
+			WHERE stylist_id = #{stylist.id} AND
 			      start_time >= #{startTime} AND
 			      end_time <= #{endTime} AND
 			      status IN ('PENDING', 'CONFIRMED')
 		    ORDER BY start_time ASC
 			""")
-	List<Reservation> findByStylistId(Id<StylistOriginalMenu> id, LocalDateTime startTime, LocalDateTime endTime);
+	List<Reservation> findById(
+			Id<Stylist> stylist,
+			LocalDateTime startTime,
+			LocalDateTime endTime);
 
 	@Insert("""
 			INSERT INTO reservations (
@@ -73,14 +75,40 @@ public interface ReservationRepository {
 			LocalDateTime startTime, LocalDateTime endTime, Status status, LocalDateTime now);
 	
 	@ResultMap(value = "reservationResultMap")
-	@Select("""
-			SELECT * FROM reservations WHERE id = #{id}
-			""")
-	Optional<Reservation> findByReservationId(Id<Reservation> id);
+	@Select("SELECT * FROM reservations WHERE id = #{id}")
+	Optional<Reservation> findByRid(Id<Reservation> rid);
 
 	@Update("""
 			UPDATE reservations SET status = #{status} WHERE id = #{id}
 			""")
 	void update(Reservation reservation);
+
+	@ResultMap(value = "reservationResultMap")
+	@Select("""
+			SELECT id,
+			       customer_id,
+			       stylist_id,
+			       menu_id,
+			       start_time,
+			       end_time,
+			       status
+			FROM reservations
+			WHERE status = #{status} AND
+			      stylist_id = #{id.id}""")
+	List<Reservation> findByStatus(Id<User> uid, Status status);
+
+	@ResultMap(value = "reservationResultMap")
+	@Select("""
+			SELECT id,
+			       customer_id,
+			       stylist_id,
+			       menu_id,
+			       start_time,
+			       end_time,
+			       status
+			FROM reservations
+			WHERE customer_id = #{id}
+			""")
+	List<Reservation> findByUserId(Id<User> uid);
 
 }

@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
@@ -52,8 +53,8 @@ public class StylistMenuService {
 									m.getBasePrice()));
 	}
 
-	public List<Menu> getMenuForStylist(long id) {
-		return stylistMenuRepository.findAllMenu(new Id<Menu>(id));
+	public List<Menu> getMenuByStylist(long id) {
+		return stylistMenuRepository.findAllByStylistId(new Id<Stylist>(id));
 		
 	}
 
@@ -78,8 +79,8 @@ public class StylistMenuService {
 				                   LocalTime.parse(businessHour.endTime())));
 		
 		// 予約一覧を取り出す
-		Id<StylistOriginalMenu> id = new Id<>(stylistId);
-		List<Reservation> reservations = reservationRepository.findByStylistId(
+		Id<Stylist> id = new Id<>(stylistId);
+		List<Reservation> reservations = reservationRepository.findById(
 				id,
 				day.atTime(LocalTime.parse(businessHour.startTime())),
 				day.atTime(LocalTime.parse(businessHour.endTime()))
@@ -93,7 +94,7 @@ public class StylistMenuService {
 							LocalTime.of(reservation.getEndTime().getHour(), reservation.getEndTime().getMinute())));
 		}
 		
-		Menu menu = stylistMenuRepository.findStylistMenuByStylistIdAndMenuId(new Id<Stylist>(stylistId), new Id<Menu>(menuId));
+		Menu menu = getMenu(stylistMenuRepository.findAllByStylistId(new Id<Stylist>(stylistId)),menuId);
 		log.info("menu={}", menu);
 		List<TimeRange> candidate = new ArrayList<>();
 		
@@ -153,5 +154,16 @@ public class StylistMenuService {
 			}
 		}
 		return candidate;
+	}
+	
+	 private Menu getMenu(List<Menu> menus, long menuId) {
+		Optional<Menu> menu = menus.stream().filter(m -> m.getId() == menuId).findFirst();
+		if(menu.isEmpty()) {
+			throw new NoSuchElementException("""
+					指定したメニューはありません
+					再度スタイリストのメニューをご確認ください
+					""");
+		}
+		return menu.get(); 
 	}
 }

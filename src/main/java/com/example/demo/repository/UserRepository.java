@@ -1,7 +1,6 @@
 package com.example.demo.repository;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 
 import org.apache.ibatis.annotations.Delete;
@@ -9,7 +8,6 @@ import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Options;
 import org.apache.ibatis.annotations.Result;
-import org.apache.ibatis.annotations.ResultMap;
 import org.apache.ibatis.annotations.Results;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
@@ -39,8 +37,8 @@ public interface UserRepository {
 	@Delete("DELETE FROM users WHERE id = #{id}")
 	long delete(Long id);
 	
-	@Select("SELECT * FROM users WHERE name = #{username}")
-	Optional<User> findByUsername(String username);
+	@Select("SELECT * FROM users WHERE email = #{email}")
+	Optional<User> findByEmail(String email);
 
 	@Results(id = "userResultMap", value = {
 			@Result(property = "id", column = "id"),
@@ -48,10 +46,6 @@ public interface UserRepository {
 			@Result(property = "email", column = "email"),
 			@Result(property = "role", column = "role")
 	})
-	@Select("SELECT id, name, email, role FROM users WHERE role = #{role}")
-	List<User> findByRole(String role);
-	
-	@ResultMap(value = "userResultMap")
 	@Select("SELECT id, name, email, role FROM users WHERE id = #{id}")
 	Optional<User> findById(Id<User> uid);
 	

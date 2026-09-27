@@ -1,5 +1,6 @@
 package com.example.demo.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.apache.ibatis.annotations.Delete;
@@ -18,7 +19,6 @@ public interface StylistRepository {
 			""")
 	long lockStylist(Id<Stylist> id);
 	
-//	@Options(useGeneratedKeys = true, keyProperty = "id")
 	@Insert("""
 			  INSERT INTO stylists (user_id, bio)
 			  VALUES
@@ -31,5 +31,13 @@ public interface StylistRepository {
 
 	@Delete("DELETE FROM stylists WHERE user_id = #{id}")
 	void delete(Id<Stylist> id);
+	
+	@Select("""
+			SELECT u.id, u.name, u.emai, s.bio
+			FROM stylists s
+			LEFT JOIN users u
+			  ON u.id = s.user_id
+			""")
+	List<Stylist> findAll();
 
 }

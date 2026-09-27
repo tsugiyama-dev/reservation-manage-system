@@ -5,7 +5,6 @@ import java.util.List;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Result;
-import org.apache.ibatis.annotations.ResultMap;
 import org.apache.ibatis.annotations.Results;
 import org.apache.ibatis.annotations.Select;
 
@@ -50,20 +49,6 @@ public interface StylistMenuRepository {
 			ON sm.menu_id = m.id
 			WHERE sm.stylist_id = #{id}
 			""")
-	List<Menu> findAllMenu(Id<Menu> id);
-	
-	@ResultMap(value = "menuResultMap")
-	@Select("""
-			SELECT m.name as name,
-			       sm.menu_id as menu_id,
-			       sm.duration_minutes as duration_minutes,
-			       sm.price as price
-			FROM menus as m
-			RIGHT JOIN stylists_menus as sm
-			ON sm.menu_id = m.id
-			WHERE sm.stylist_id = #{stylistId.id} AND
-			      sm.menu_id = #{menuId.id}
-			""")
-	Menu findStylistMenuByStylistIdAndMenuId(Id<Stylist> stylistId, Id<Menu> menuId);
+	List<Menu> findAllByStylistId(Id<Stylist> id);
 	
 }

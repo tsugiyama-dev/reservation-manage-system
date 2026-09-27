@@ -6,12 +6,12 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.demo.domain.Status;
 import com.example.demo.domain.dto.Id;
+import com.example.demo.domain.dto.ReservationRequest;
 import com.example.demo.domain.entity.Menu;
 import com.example.demo.domain.entity.Reservation;
 import com.example.demo.domain.entity.Stylist;
@@ -19,6 +19,7 @@ import com.example.demo.domain.entity.User;
 import com.example.demo.repository.ReservationRepository;
 import com.example.demo.repository.StylistMenuRepository;
 import com.example.demo.repository.StylistRepository;
+import com.example.demo.repository.UserRepository;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,29 +29,32 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor
 public class CustomerService {
 	
-	StylistMenuService stylistMenuService;
-	StylistMenuRepository stylistMenuRepository;
-	StylistRepository stylistRepository;
-	ReservationRepository reservationRepository;
-	AuthenticationService authenticationService;
+	private UserRepository userRepository;
+	private StylistMenuService stylistMenuService;
+	private StylistMenuRepository stylistMenuRepository;
+	private StylistRepository stylistRepository;
+	private ReservationRepository reservationRepository;
+	private ReservationCheckService reservationCheckService;
 	
 	@Transactional
-	public void tentativeReserve(long stylistId, LocalDateTime date, long menuId, long userId) {
+	public void reserve(ReservationRequest req, String email) {
 	
-		Id<Stylist> sid = new Id<>(stylistId);
-		Id<Menu> mid = new Id<>(menuId);
-		Id<User> uid = new Id<>(userId);
+		User user = userRepository.findByEmail(email).orElseThrow(() -> {
+			throw new NoSuchElementException("ユーザーが見つかりません");
+		});
+		Id<Stylist> sid = new Id<>(req.stylistId());
+		Id<Menu> mid = new Id<>(req.menuId());
+		Id<User> uid = new Id<>(user.getId());
 		
 		stylistRepository.lockStylist(sid); // Lock獲得操作
 	
-		Menu menu = stylistMenuRepository.findStylistMenuByStylistIdAndMenuId(sid, mid);
-		LocalTime trans = LocalTime.of(date.getHour(), date.getMinute());
-		LocalTime end = trans.plusMinutes(menu.getBaseDurationMinutes());
-		TimeRange timeRange = new TimeRange(LocalTime.of(date.getHour(), date.getMinute()),
-				                            LocalTime.of(end.getHour(), end.getMinute()));
+		Menu menu = getMenu(stylistMenuRepository.findAllByStylistId(sid), req.menuId());
+		LocalTime start = LocalTime.of(req.date().getHour(), req.date().getMinute());
+		LocalTime end = start.plusMinutes(menu.getBaseDurationMinutes());
+		TimeRange timeRange = new TimeRange(start, end);
 
 		// 空き時間の再チェック
-		List<TimeRange> emptyRanges = stylistMenuService.getList(stylistId, date, menuId);
+		List<TimeRange> emptyRanges = stylistMenuService.getList(req.stylistId(), req.date(), req.menuId());
 		Optional<TimeRange> result = emptyRanges.stream().
 				filter(range -> {
 					return timeRange.getStartTime().equals(range.getStartTime()) &&
@@ -59,31 +63,68 @@ public class CustomerService {
 		if(result.isEmpty()) {
 			throw new IllegalStateException("既に予約が入っています");
 		}
-		reservationRepository.insert(uid, sid, mid, date, date.plusMinutes(menu.getBaseDurationMinutes()), Status.PENDING, LocalDateTime.now());
+		reservationRepository.insert(uid, sid, mid, req.date(), req.date().plusMinutes(menu.getBaseDurationMinutes()), Status.PENDING, LocalDateTime.now());
+	}
+	
+	public void cancel(long rid, String email) {
+		Reservation checked = reservationCheckService.cancelCheck(rid, email);
+		reservationRepository.update(checked);
+	}
+
+	public List<Reservation> getReservationList(String email) {
+		User user = userRepository.findByEmail(email).orElseThrow(() -> {
+			throw new IllegalArgumentException("ユーザーが見つかりません");
+		});
+		return reservationRepository.findByUserId(new Id<User>(user.getId()));
+		
 	}
 
 
-	public void cancel(long reservationId, String email) {
-		Reservation reservation = reservationRepository.findByReservationId(new Id<Reservation>(reservationId)).orElseThrow(() -> {
-			throw new NoSuchElementException("指定された予約が見つかりません");
-		});
+	@Transactional
+	public void changeSchedule(String email, long reservationId, ReservationRequest change) {
 		
-		try {
-			authenticationService.authenticate(email, reservation.getCustomerId());
-		}catch(NoSuchElementException e) {
-			throw new NoSuchElementException("ユーザーが見つかりません");
-		}catch(AccessDeniedException e) {
-			throw new AccessDeniedException("指定された予約を操作できません");
+		long userId = reservationCheckService.changeCheck(email, reservationId);
+		
+		Id<Stylist> sid = new Id<>(change.stylistId());
+		Id<Menu> mid = new Id<>(change.menuId());
+		Id<User> uid = new Id<>(userId);
+		
+		stylistRepository.lockStylist(sid); // Lock獲得操作
+		
+		Menu menu = getMenu(stylistMenuRepository.findAllByStylistId(sid), change.menuId());
+		LocalTime start = LocalTime.of(change.date().getHour(), change.date().getMinute());
+		LocalTime end = start.plusMinutes(menu.getBaseDurationMinutes());
+		TimeRange timeRange = new TimeRange(start, end);
+		
+		// 空き時間の再チェック
+		List<TimeRange> emptyRanges = stylistMenuService.getList(change.stylistId(), change.date(), change.menuId());
+		Optional<TimeRange> result = emptyRanges.stream().
+				filter(range -> {
+					return timeRange.getStartTime().equals(range.getStartTime()) &&
+				    timeRange.getEndTime().equals(range.getEndTime());
+				}).findFirst();
+		if(result.isEmpty()) {
+			throw new IllegalStateException("既に予約が入っています");
 		}
 		
-		boolean isConfirmed = reservation.getStatus().equals(Status.CONFIRMED);
-		boolean isPending = reservation.getStatus().equals(Status.PENDING);
-		if(!isConfirmed && !isPending) {
-			throw new IllegalStateException("保留中もしくは確定された予約しか操作できません");
+		reservationRepository.insert(uid,
+				sid,
+				mid,
+				LocalDateTime.of(change.date().getYear(), change.date().getMonth(), change.date().getDayOfMonth(), start.getHour(), start.getMinute()),
+				LocalDateTime.of(change.date().getYear(), change.date().getMonth(), change.date().getDayOfMonth(), end.getHour(), end.getMinute()),
+				Status.PENDING,
+				LocalDateTime.now());
+	}
+	
+	 private Menu getMenu(List<Menu> menus, long menuId) {
+		Optional<Menu> menu = menus.stream().filter(m -> m.getId() == menuId).findFirst();
+		if(menu.isEmpty()) {
+			throw new NoSuchElementException("""
+					指定したメニューはありません
+					再度スタイリストのメニューをご確認ください
+					""");
 		}
-		
-		reservation.setStatus(Status.CANCELLED);
-		reservationRepository.update(reservation);
+		return menu.get(); 
 	}
 
 	

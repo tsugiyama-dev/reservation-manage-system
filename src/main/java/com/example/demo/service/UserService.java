@@ -1,13 +1,12 @@
 package com.example.demo.service;
 
-import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.example.demo.NotFoundUserException;
 import com.example.demo.config.TokenGenerator;
 import com.example.demo.domain.Role;
 import com.example.demo.domain.dto.Id;
@@ -25,11 +24,10 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor
 public class UserService {
 
-	StylistRepository stylistRepository;
-	BCryptPasswordEncoder passwordEncoder;
-	UserRepository userRepository;
-    TokenGenerator tokenGenerator;
-    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+	private StylistRepository stylistRepository;
+	private BCryptPasswordEncoder passwordEncoder;
+	private UserRepository userRepository;
+	private TokenGenerator tokenGenerator;
     
     @Transactional
 	public void registerUser(UserForm form) {
@@ -50,9 +48,8 @@ public class UserService {
 		}
 	}	
 	
-	public String findUser(String username, String password) {
-		User user = findByUsername(username);
-		if(user == null) {throw new NotFoundUserException("ユーザーが見つかりません");}
+	public String findUser(String email, String password) {
+		User user = findByUsername(email);
 		
 		boolean isMatch = passwordEncoder.matches(password, user.getPassword_hash());
 		
@@ -63,19 +60,9 @@ public class UserService {
 		return tokenGenerator.generateToken(user.getEmail(), user.getRole().name());
 		
 	}
-	public List<User> findUser(String role) {
-		
-		return userRepository.findByRole(role);
+	public List<Stylist> findUser() {
+		return stylistRepository.findAll();
 	}
-	
-	private User findByUsername(String username) {
-		return userRepository.findByUsername(username).orElseThrow(() -> new IllegalArgumentException("ユーザーが存在しません"));
-	}
-	
-	private String passwordEncoder(String password) {
-		return passwordEncoder.encode(password);
-	}
-
 	@Transactional
 	public void delete(long id) {
 		
@@ -86,4 +73,13 @@ public class UserService {
 		userRepository.delete(id);
 		
 	}
+	
+	private User findByUsername(String email) {
+		return userRepository.findByEmail(email).orElseThrow(() -> new NoSuchElementException("ユーザーが存在しません"));
+	}
+	
+	private String passwordEncoder(String password) {
+		return passwordEncoder.encode(password);
+	}
+
 }

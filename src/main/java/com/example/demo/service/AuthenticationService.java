@@ -12,31 +12,38 @@ import com.example.demo.domain.entity.User;
 import com.example.demo.repository.UserRepository;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Component
 @AllArgsConstructor
 public class AuthenticationService {
 
 	public UserRepository userRepository;
 	
-	public boolean authenticate(String email, long uid) throws NoSuchElementException, AccessDeniedException{
+	public void authenticate(String email, long uid) throws NoSuchElementException, AccessDeniedException{
 		User user = userRepository.findById(new Id<User>(uid)).orElseGet(() -> {
-			throw new NoSuchElementException("認証できませんでした");
+			log.info("ユーザーが見つかりません:[id = {}]", uid);
+			throw new NoSuchElementException("ユーザーが見つかりません: [id = " + uid + "]");
 		});
-		
 		if(!email.equals(user.getEmail())) {
-			throw new AccessDeniedException("認証できませんでした");
+			log.info("本人以外認証できません:[email = {}]", user.getEmail());
+			throw new AccessDeniedException("本人ではないため認証できませんでした");
 		}
-		
-		return true;
 	}
+	
 	
 	public static boolean isAdmin(Authentication auth) {
 		return auth.getPrincipal() != null 
-				&& ((String)auth.getPrincipal()).equals(Role.ADMIN.name());
+				&& auth.getAuthorities().stream().map(authority -> 
+				authority.getAuthority()).toList().contains(Role.ADMIN.name());
 	}
 	public static boolean isStylist(Authentication auth) {
+		log.info("権限一覧={}", auth.getAuthorities().stream().map(authority -> 
+				authority.getAuthority()).toList());
+		
 		return auth.getPrincipal() != null 
-				&& ((String)auth.getPrincipal()).equals(Role.STYLIST.name());
+				&& auth.getAuthorities().stream().map(authority -> 
+				authority.getAuthority()).toList().contains(Role.STYLIST.name());
 	}
 }
