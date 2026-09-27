@@ -49,16 +49,14 @@ public class UserService {
 	}	
 	
 	public String findUser(String email, String password) {
-		User user = findByUsername(email);
-		
+
+		User user = findByUsername(email);	
 		boolean isMatch = passwordEncoder.matches(password, user.getPassword_hash());
 		
 		if(!isMatch) {
 			throw new IllegalArgumentException("パスワードが一致しません");
 		}
-		
 		return tokenGenerator.generateToken(user.getEmail(), user.getRole().name());
-		
 	}
 	public List<Stylist> findUser() {
 		return stylistRepository.findAll();
@@ -70,8 +68,7 @@ public class UserService {
 			throw new IllegalArgumentException("指定されたスタイリストは登録されていません: Id=" + id);
 		});
 		stylistRepository.delete(new Id<Stylist>(id));
-		userRepository.delete(id);
-		
+		userRepository.delete(id);	
 	}
 	
 	private User findByUsername(String email) {

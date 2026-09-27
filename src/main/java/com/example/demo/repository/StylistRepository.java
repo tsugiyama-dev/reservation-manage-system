@@ -6,6 +6,8 @@ import java.util.Optional;
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Result;
+import org.apache.ibatis.annotations.Results;
 import org.apache.ibatis.annotations.Select;
 
 import com.example.demo.domain.dto.Id;
@@ -32,6 +34,12 @@ public interface StylistRepository {
 	@Delete("DELETE FROM stylists WHERE user_id = #{id}")
 	void delete(Id<Stylist> id);
 	
+	@Results(value = {
+			@Result(property = "userId", column = "id"),
+			@Result(property = "name", column = "name"),
+			@Result(property = "email", column = "email"),
+			@Result(property = "bio", column = "bio")
+	})
 	@Select("""
 			SELECT u.id, u.name, u.email, s.bio
 			FROM stylists s

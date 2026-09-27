@@ -36,7 +36,7 @@ public class AuthenticationService {
 	public static boolean isAdmin(Authentication auth) {
 		return auth.getPrincipal() != null 
 				&& auth.getAuthorities().stream().map(authority -> 
-				authority.getAuthority()).toList().contains(Role.ADMIN.name());
+				authority.getAuthority()).toList().contains("ROLE_" + Role.ADMIN.name());
 	}
 	public static boolean isStylist(Authentication auth) {
 		log.info("権限一覧={}", auth.getAuthorities().stream().map(authority -> 
@@ -44,6 +44,6 @@ public class AuthenticationService {
 		
 		return auth.getPrincipal() != null 
 				&& auth.getAuthorities().stream().map(authority -> 
-				authority.getAuthority()).toList().contains(Role.STYLIST.name());
+				authority.getAuthority()).toList().contains("ROLE_" + Role.STYLIST.name());
 	}
 }

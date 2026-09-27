@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.demo.domain.Role;
 import com.example.demo.domain.entity.Menu;
 import com.example.demo.domain.entity.Stylist;
 import com.example.demo.service.StylistMenuService;
@@ -25,8 +24,6 @@ public class StylistMenuController {
 
     private final UserService userService;
     private final StylistMenuService stylistService;
-    
-    Role STYLIST = Role.STYLIST;
 	
 	public StylistMenuController(UserService userService,
 			StylistMenuService stylistService) {
@@ -45,9 +42,7 @@ public class StylistMenuController {
 			@PathVariable long id) {
 
 		return stylistService.getMenuByStylist(id);
-		
 	}
-	
 	@GetMapping("/{id}/availability")
 	public List<TimeRange> emptyTimeList(
 			@PathVariable long id,
@@ -55,8 +50,5 @@ public class StylistMenuController {
 			@RequestParam long menuId) {
 		
 		return stylistService.getList(id, date, menuId);
-		
 	}
-	
-	
 }

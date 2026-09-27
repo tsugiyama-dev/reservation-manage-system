@@ -5,7 +5,6 @@ import java.time.LocalDateTime;
 public record ReservationRequest(
 		long stylistId,
 		LocalDateTime date,
-		long menuId/**,
-		long userId**/) {
+		long menuId) {
 
 }
