@@ -30,8 +30,6 @@ public class StylistMenuController {
 		this.userService = userService;
 		this.stylistService = stylistService;
 	}
-	
-	
 	@GetMapping
 	public List<Stylist> list() {
 		return userService.findUser();

@@ -47,7 +47,7 @@ public class CustomerController {
 	public void changeDate(
 			@PathVariable long id,
 			Authentication auth,
-			ReservationRequest change) {
+			@RequestBody ReservationRequest change) {
 		String email = (String)auth.getPrincipal();
 		customerService.changeSchedule(email, id, change);
 	}
