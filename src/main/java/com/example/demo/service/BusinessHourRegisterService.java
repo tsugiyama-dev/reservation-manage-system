@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import com.example.demo.domain.dto.BusinessHour;
 import com.example.demo.domain.dto.BusinessHours;
 import com.example.demo.domain.dto.Id;
+import com.example.demo.domain.entity.Stylist;
 import com.example.demo.repository.BusinessHourRepository;
 
 import lombok.AllArgsConstructor;
@@ -26,12 +27,12 @@ public class BusinessHourRegisterService {
 	 */
 	public List<BusinessHour> register(long stylistId, BusinessHours list) {
 		
-		if(businessHourRepository.findById(new Id<BusinessHour>(stylistId)) != null) {
+		if(businessHourRepository.findById(new Id<Stylist>(stylistId)) != null) {
 			businessHourRepository.delete(stylistId);
 		}
 		for(BusinessHour e : list.businessHours()) {
 			businessHourRepository.insert(stylistId, e);
 		}
-		return businessHourRepository.findById(new Id<BusinessHour>(stylistId));
+		return businessHourRepository.findById(new Id<Stylist>(stylistId));
 	}
 }

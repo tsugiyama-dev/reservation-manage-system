@@ -48,7 +48,7 @@ public interface ReservationRepository {
 			      status IN ('PENDING', 'CONFIRMED')
 		    ORDER BY start_time ASC
 			""")
-	List<Reservation> findById(
+	List<Reservation> findByStylistId(
 			Id<Stylist> stylist,
 			LocalDateTime startTime,
 			LocalDateTime endTime);
@@ -76,7 +76,7 @@ public interface ReservationRepository {
 	
 	@ResultMap(value = "reservationResultMap")
 	@Select("SELECT * FROM reservations WHERE id = #{id}")
-	Optional<Reservation> findByRid(Id<Reservation> rid);
+	Optional<Reservation> findById(Id<Reservation> rid);
 
 	@Update("""
 			UPDATE reservations SET status = #{status} WHERE id = #{id}

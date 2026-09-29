@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.demo.domain.dto.Id;
 import com.example.demo.domain.entity.Menu;
 import com.example.demo.domain.entity.Stylist;
 import com.example.demo.service.StylistMenuService;
@@ -47,6 +48,6 @@ public class StylistMenuController {
 			@RequestParam LocalDateTime date,
 			@RequestParam long menuId) {
 		
-		return stylistService.getList(id, date, menuId);
+		return stylistService.getList(new Id<Stylist>(id), date, new Id<Menu>(menuId));
 	}
 }

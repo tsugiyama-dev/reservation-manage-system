@@ -9,6 +9,7 @@ import org.apache.ibatis.annotations.Select;
 
 import com.example.demo.domain.dto.BusinessHour;
 import com.example.demo.domain.dto.Id;
+import com.example.demo.domain.entity.Stylist;
 
 @Mapper
 public interface BusinessHourRepository {
@@ -23,5 +24,5 @@ public interface BusinessHourRepository {
 	
 	@Select("SELECT day_of_week, start_time, end_time FROM business_hour "
 			+ "WHERE stylist_id = #{id}")
-	List<BusinessHour> findById(Id<BusinessHour> id);
+	List<BusinessHour> findById(Id<Stylist> id);
 }

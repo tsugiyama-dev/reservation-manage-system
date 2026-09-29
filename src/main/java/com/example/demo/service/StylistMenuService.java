@@ -58,13 +58,13 @@ public class StylistMenuService {
 		
 	}
 
-	public List<TimeRange> getList(long stylistId, LocalDateTime date, long menuId) {
+	public List<TimeRange> getList(Id<Stylist> sid, LocalDateTime date, Id<Menu> mid) {
 		
 		String dayOfWeek = date.getDayOfWeek().toString().substring(0, 3); // 曜日
 		LocalDate day = LocalDate.of(date.getYear(), date.getMonth(), date.getDayOfMonth()); // 日にち
 		
 		// スタイリストの営業日を取り出す
-		List<BusinessHour> businessDays = businessHourRepository.findById(new Id<BusinessHour>(stylistId));
+		List<BusinessHour> businessDays = businessHourRepository.findById(sid);
 		
 		Optional<BusinessHour> result = businessDays.stream()
 				.filter(b -> b.dayOfWeek().toUpperCase().equals(dayOfWeek)).findFirst();
@@ -79,9 +79,9 @@ public class StylistMenuService {
 				                   LocalTime.parse(businessHour.endTime())));
 		
 		// 予約一覧を取り出す
-		Id<Stylist> id = new Id<>(stylistId);
-		List<Reservation> reservations = reservationRepository.findById(
-				id,
+
+		List<Reservation> reservations = reservationRepository.findByStylistId(
+				sid,
 				day.atTime(LocalTime.parse(businessHour.startTime())),
 				day.atTime(LocalTime.parse(businessHour.endTime()))
 				);
@@ -94,7 +94,7 @@ public class StylistMenuService {
 							LocalTime.of(reservation.getEndTime().getHour(), reservation.getEndTime().getMinute())));
 		}
 		
-		Menu menu = getMenu(stylistMenuRepository.findAllByStylistId(new Id<Stylist>(stylistId)),menuId);
+		Menu menu = getMenu(stylistMenuRepository.findAllByStylistId(sid),mid);
 		log.info("menu={}", menu);
 		List<TimeRange> candidate = new ArrayList<>();
 		
@@ -156,8 +156,8 @@ public class StylistMenuService {
 		return candidate;
 	}
 	
-	 private Menu getMenu(List<Menu> menus, long menuId) {
-		Optional<Menu> menu = menus.stream().filter(m -> m.getId() == menuId).findFirst();
+	 private Menu getMenu(List<Menu> menus, Id<Menu> menuId) {
+		Optional<Menu> menu = menus.stream().filter(m -> m.getId() == menuId.id()).findFirst();
 		if(menu.isEmpty()) {
 			throw new NoSuchElementException("""
 					指定したメニューはありません

@@ -1,7 +1,10 @@
 package com.example.demo.restcontroller;
 
+import static com.example.demo.service.AuthenticationService.*;
+
 import java.util.List;
 
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -17,7 +20,6 @@ import com.example.demo.service.CustomerService;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 @RestController
 @Slf4j
 @AllArgsConstructor
@@ -31,15 +33,18 @@ public class CustomerController {
 			Authentication auth,
 			@RequestBody ReservationRequest req) {
 		String email = (String)auth.getPrincipal();
+		if(!isCustomer(auth))throw new AccessDeniedException("アクセスできません");
 		customerService.reserve(req,email);
 	}
 	@GetMapping("/me")
 	public List<Reservation> list(Authentication auth) {
+		if(!isCustomer(auth))throw new AccessDeniedException("アクセスできません");
 		String email = (String) auth.getPrincipal();
 		return customerService.getReservationList(email);
 	}
 	@PatchMapping("/{id}/cancel")
 	public void cancel(Authentication auth, @PathVariable long id) {
+		if(!isCustomer(auth))throw new AccessDeniedException("アクセスできません");
 		String email = (String)auth.getPrincipal();
 		customerService.cancel(id, email);
 	}
@@ -48,6 +53,7 @@ public class CustomerController {
 			@PathVariable long id,
 			Authentication auth,
 			@RequestBody ReservationRequest change) {
+		if(!isCustomer(auth))throw new AccessDeniedException("アクセスできません");
 		String email = (String)auth.getPrincipal();
 		customerService.changeSchedule(email, id, change);
 	}

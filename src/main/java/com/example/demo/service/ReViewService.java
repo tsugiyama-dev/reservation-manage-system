@@ -21,14 +21,14 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class ReViewService {
 
-	AuthenticationService authenticationService;
-	ReservationRepository reservationRepository;
-	ReviewRepository reviewRepository;
+	private final AuthenticationService authenticationService;
+	private final ReservationRepository reservationRepository;
+	private final ReviewRepository reviewRepository;
 	
 	public void post(String email, ReviewPostForm form, long reservationId) {
 		
 		Id<Reservation> rid = new Id<>(reservationId);
-		Reservation reservation = reservationRepository.findByRid(rid).orElseThrow(() -> {
+		Reservation reservation = reservationRepository.findById(rid).orElseThrow(() -> {
 			throw new NoSuchElementException("予約が見つかりません");
 		});
 		authenticationService.authenticate(email, reservation.getCustomerId());

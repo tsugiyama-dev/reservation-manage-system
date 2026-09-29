@@ -34,16 +34,14 @@ public class CustomerService {
 	private StylistMenuRepository stylistMenuRepository;
 	private StylistRepository stylistRepository;
 	private ReservationRepository reservationRepository;
-	private ReservationCheckService reservationCheckService;
+	private ReservationRequestValidator requestValidator;
 	
 	@Transactional
-	public void reserve(ReservationRequest req, String email) {
+	public void reserve(ReservationRequest<Stylist, Menu> req, String email) {
 	
-		User user = userRepository.findByEmail(email).orElseThrow(() -> {
-			throw new NoSuchElementException("ユーザーが見つかりません");
-		});
-		Id<Stylist> sid = new Id<>(req.stylistId());
-		Id<Menu> mid = new Id<>(req.menuId());
+		User user = userRepository.findByEmail(email).orElseThrow(() -> new NoSuchElementException("ユーザーが見つかりません"));
+		Id<Stylist> sid = req.stylistId();
+		Id<Menu> mid = req.menuId();
 		Id<User> uid = new Id<>(user.getId());
 		
 		stylistRepository.lockStylist(sid); // Lock獲得操作
@@ -67,7 +65,7 @@ public class CustomerService {
 	}
 	
 	public void cancel(long rid, String email) {
-		Reservation checked = reservationCheckService.cancelCheck(rid, email);
+		Reservation checked = requestValidator.cancelCheck(rid, email);
 		reservationRepository.update(checked);
 	}
 
@@ -81,12 +79,12 @@ public class CustomerService {
 
 
 	@Transactional
-	public void changeSchedule(String email, long reservationId, ReservationRequest change) {
+	public void changeSchedule(String email, long reservationId, ReservationRequest<Stylist, Menu> change) {
 		
-		long userId = reservationCheckService.changeCheck(email, reservationId);
+		long userId = requestValidator.changeCheck(email, reservationId);
 		
-		Id<Stylist> sid = new Id<>(change.stylistId());
-		Id<Menu> mid = new Id<>(change.menuId());
+		Id<Stylist> sid = change.stylistId();
+		Id<Menu> mid = change.menuId();
 		Id<User> uid = new Id<>(userId);
 		
 		stylistRepository.lockStylist(sid); // Lock獲得操作
@@ -97,7 +95,7 @@ public class CustomerService {
 		TimeRange timeRange = new TimeRange(start, end);
 		
 		// 空き時間の再チェック
-		List<TimeRange> emptyRanges = stylistMenuService.getList(change.stylistId(), change.date(), change.menuId());
+		List<TimeRange> emptyRanges = stylistMenuService.getList(sid, change.date(), mid);
 		Optional<TimeRange> result = emptyRanges.stream().
 				filter(range -> {
 					return timeRange.getStartTime().equals(range.getStartTime()) &&
@@ -116,8 +114,8 @@ public class CustomerService {
 				LocalDateTime.now());
 	}
 	
-	 private Menu getMenu(List<Menu> menus, long menuId) {
-		Optional<Menu> menu = menus.stream().filter(m -> m.getId() == menuId).findFirst();
+	 private Menu getMenu(List<Menu> menus, Id<Menu> menuId) {
+		Optional<Menu> menu = menus.stream().filter(m -> m.getId() == menuId.id()).findFirst();
 		if(menu.isEmpty()) {
 			throw new NoSuchElementException("""
 					指定したメニューはありません
