@@ -4,10 +4,12 @@ import java.util.NoSuchElementException;
 
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import com.example.demo.config.LoginUser;
 import com.example.demo.domain.Role;
-import com.example.demo.domain.dto.Id;
+import com.example.demo.domain.dto.LoginForm;
 import com.example.demo.domain.entity.User;
 import com.example.demo.repository.UserRepository;
 
@@ -20,18 +22,26 @@ import lombok.extern.slf4j.Slf4j;
 public class AuthenticationService {
 
 	public UserRepository userRepository;
+	private BCryptPasswordEncoder passwordEncoder;
 	
-	public void authenticate(String email, long uid) throws NoSuchElementException, AccessDeniedException{
-		User user = userRepository.findById(new Id<User>(uid)).orElseGet(() -> {
-			log.info("USER NOT FOUND : userId = {}", uid);
+	public  User authenticate(LoginForm form) {
+		User user = userRepository.findByEmail(form.email()).orElseGet(() -> {
+			log.info("ユーザーが見つかりません : email = {}", form.email());
 			throw new NoSuchElementException("ユーザーが見つかりません");
 		});
-		if(!email.equals(user.getEmail())) {
-			log.info("本人以外認証できません: email = {}", user.getEmail());
-			throw new AccessDeniedException("本人以外認証できません");
-		}
+		if(!passwordEncoder.matches(form.password(), user.getPasswordHash())) {
+			log.info("パスワードが一致しません : email = {}", form.email());
+			throw new AccessDeniedException("パスワードが一致しません");
+		};
+		return user;
 	}
 	
+	public void identify(LoginUser user, long id) {
+		if(user.id() != id) {
+			log.info("本人以外操作することはできません : userId = {}, id = {}", user.id(), id);
+			throw new AccessDeniedException("本人以外操作することはできません");
+		}
+	}
 	
 	public static boolean isAdmin(Authentication auth) {
 		return auth.getPrincipal() != null 

@@ -9,31 +9,29 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.demo.domain.TimeRange;
 import com.example.demo.domain.dto.Id;
+import com.example.demo.domain.dto.StylistResponse;
 import com.example.demo.domain.entity.Menu;
 import com.example.demo.domain.entity.Stylist;
 import com.example.demo.service.StylistMenuService;
-import com.example.demo.service.TimeRange;
-import com.example.demo.service.UserService;
 
 import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @Slf4j
 @RequestMapping("/stylists")
-public class StylistMenuController {
+public class StylistInfoController {
 
-    private final UserService userService;
+
     private final StylistMenuService stylistService;
 	
-	public StylistMenuController(UserService userService,
-			StylistMenuService stylistService) {
-		this.userService = userService;
+	public StylistInfoController(StylistMenuService stylistService) {
 		this.stylistService = stylistService;
 	}
 	@GetMapping
-	public List<Stylist> list() {
-		return userService.findUser();
+	public List<StylistResponse> list() {
+		return stylistService.getStylists();
 	}
 	
 	@GetMapping("/{id}/menus")
@@ -48,6 +46,6 @@ public class StylistMenuController {
 			@RequestParam LocalDateTime date,
 			@RequestParam long menuId) {
 		
-		return stylistService.getList(new Id<Stylist>(id), date, new Id<Menu>(menuId));
+		return stylistService.getAvalilableEmptySlot(new Id<Stylist>(id), date, new Id<Menu>(menuId), null);
 	}
 }

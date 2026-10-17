@@ -6,23 +6,25 @@ import java.util.Optional;
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Options;
 import org.apache.ibatis.annotations.Result;
 import org.apache.ibatis.annotations.Results;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
 import com.example.demo.domain.dto.Id;
-import com.example.demo.domain.dto.RegisterMenuForm;
+import com.example.demo.domain.dto.MenuRegisterForm;
 import com.example.demo.domain.entity.Menu;
 
 @Mapper
 public interface MenuRepository {
 
+	@Options(useGeneratedKeys = true, keyProperty = "id")
 	@Insert("""
 			INSERT INTO menus (name, base_duration_minutes, base_price)
-			VALUES (#{name}, #{baseDurationMinutes}, #{price})
+			VALUES (#{name}, #{baseDurationMinutes}, #{basePrice})
 			""")
-	void insert(RegisterMenuForm form);
+	void insert(Menu form);
 	
 	@Results(value= {
 			@Result(property = "id", column = "id"),
@@ -64,7 +66,7 @@ public interface MenuRepository {
 			   </set>
 			  </script>
 			  """)
-	void update(RegisterMenuForm form);
+	void update(MenuRegisterForm form);
 	
 	@Delete("DELETE FROM menus WHERE id = #{menuId}")
 	void delete(Id<Menu> menuId);

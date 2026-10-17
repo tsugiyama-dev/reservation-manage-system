@@ -16,16 +16,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.demo.domain.dto.BusinessHour;
 import com.example.demo.domain.dto.BusinessHours;
-import com.example.demo.domain.dto.RegisterMenuForm;
+import com.example.demo.domain.dto.MenuRegisterForm;
+import com.example.demo.domain.dto.OriginalMenu;
 import com.example.demo.domain.dto.Response;
-import com.example.demo.domain.dto.StylistOriginalMenu;
-import com.example.demo.domain.dto.UserForm;
+import com.example.demo.domain.dto.UserRegisterForm;
 import com.example.demo.domain.entity.Menu;
+import com.example.demo.service.AdminService;
 import com.example.demo.service.AuthenticationService;
-import com.example.demo.service.BusinessHourRegisterService;
-import com.example.demo.service.MenuRegisterService;
-import com.example.demo.service.StylistMenuService;
-import com.example.demo.service.UserService;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,19 +34,15 @@ import lombok.extern.slf4j.Slf4j;
 
 public class AdminController {
 
-	UserService userService;
-	BusinessHourRegisterService businessHourRegisterService;
-	MenuRegisterService menuRegisterService;
-	StylistMenuService stylistMenuService;
+	private AdminService adminService;
 	
 	@PostMapping("/stylist")
 	public void registerStylist(
-			@RequestBody UserForm user,
+			@RequestBody UserRegisterForm form,
 			Authentication auth) {
 		
 		checkAuthority(auth);
-		userService.registerUser(user);
-		
+		adminService.registerStylist(form);		
 	}
 	
 	@PutMapping("/stylists/{id}/business-hours")
@@ -59,33 +52,33 @@ public class AdminController {
 			Authentication auth) {
 		
 		checkAuthority(auth);
-		log.info("営業時間の登録開始");
-		return businessHourRegisterService.register(stylistId, businessHours);
+		log.info("営業時間の設定処理開始");
+		return adminService.registerBusinessHour(businessHours, stylistId);
 	}
 	
 	@PostMapping("/menus")
-	public Response<Menu> registerMenu(@RequestBody RegisterMenuForm menu,
+	public Response<Menu> registerMenu(@RequestBody MenuRegisterForm menu,
 			Authentication auth) {
 		
 		checkAuthority(auth);
-		return menuRegisterService.registerMenu(menu);
+		return adminService.registerMenu(menu);
 	}
-	@DeleteMapping("/stylist/{id}")
-	public void deleteStylist(@PathVariable long id,
+	@DeleteMapping("/stylist/{stylistId}")
+	public void deleteStylist(@PathVariable long stylistId,
 			Authentication auth) {
-		checkAuthority(auth);
-		userService.delete(id);
 		
+		checkAuthority(auth);
+	    adminService.delete(stylistId);
 	}
 	
-	@PutMapping("/stylists/{id}/menus/{menuId}")
-	public void assignMenu(@PathVariable long id,
+	@PutMapping("/stylists/{stylistId}/menus/{menuId}")
+	public void assignMenu(@PathVariable long stylistId,
 			@PathVariable long menuId,
-			@RequestBody @Valid StylistOriginalMenu original,
+			@RequestBody @Valid OriginalMenu originalMenu,
 			Authentication auth) {
 		
 		checkAuthority(auth);
-		stylistMenuService.assignMenu(id, menuId, original);
+		adminService.assign(stylistId, menuId, originalMenu);
 	}
 	
 	

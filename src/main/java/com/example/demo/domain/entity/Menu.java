@@ -1,5 +1,10 @@
 package com.example.demo.domain.entity;
 
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+
+@AllArgsConstructor
+@NoArgsConstructor
 public class Menu {
 
 	private int id;
@@ -17,6 +22,11 @@ public class Menu {
 	public void setBaseDurationMinutes(int baseDurationMinutes) {this.baseDurationMinutes  = baseDurationMinutes;}
 	public void setBasePrice(int basePrice) {this.basePrice = basePrice;}
 	
+	public Menu(String name, int durationMinutes, int price) {
+		this.name = name;
+		this.baseDurationMinutes = durationMinutes;
+		this.basePrice = price;
+	}
 	@Override
 	public String toString() {return "id=[" + id + "] name=[" + name + "] baseDurationMinutes=[" + baseDurationMinutes + "] basePrice=[" + basePrice + "]";}
 	

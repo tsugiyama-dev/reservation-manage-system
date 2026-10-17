@@ -8,12 +8,13 @@ import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Options;
 import org.apache.ibatis.annotations.Result;
+import org.apache.ibatis.annotations.ResultMap;
 import org.apache.ibatis.annotations.Results;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
 import com.example.demo.domain.dto.Id;
-import com.example.demo.domain.dto.UserForm;
+import com.example.demo.domain.dto.UserRegisterForm;
 import com.example.demo.domain.entity.User;
 
 @Mapper
@@ -22,7 +23,7 @@ public interface UserRepository {
 	@Options(useGeneratedKeys = true, keyProperty = "id")
 	@Insert("""
 			   INSERT INTO users (name, password_hash, email, role)
-			   VALUES (#{name}, #{password_hash}, #{email}, #{role})
+			   VALUES (#{name}, #{passwordHash}, #{email}, #{role})
 			""")
 	long insert(User user);
 	
@@ -32,11 +33,12 @@ public interface UserRepository {
 	
 	
 	@Update("UPDATE users SET username = #{username}, password = #{password}, email = #{email}, role = #{role} WHERE id = #{id}")
-	User update(UserForm user);
+	User update(UserRegisterForm user);
 	
 	@Delete("DELETE FROM users WHERE id = #{id}")
 	long delete(Long id);
 	
+	@ResultMap("userResultMap")
 	@Select("SELECT * FROM users WHERE email = #{email}")
 	Optional<User> findByEmail(String email);
 
@@ -44,6 +46,7 @@ public interface UserRepository {
 			@Result(property = "id", column = "id"),
 			@Result(property = "name", column = "name"),
 			@Result(property = "email", column = "email"),
+			@Result(property = "passwordHash", column = "password_hash"),
 			@Result(property = "role", column = "role")
 	})
 	@Select("SELECT id, name, email, role FROM users WHERE id = #{id}")

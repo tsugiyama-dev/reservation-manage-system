@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.demo.config.LoginUser;
 import com.example.demo.domain.dto.ReviewPostForm;
 import com.example.demo.service.ReViewService;
 import com.example.demo.service.StylistEvaluateResult;
@@ -25,8 +26,8 @@ public class ReviewPostController {
 	public void post(@RequestBody @Valid ReviewPostForm form,
 			Authentication auth,
 			@PathVariable long id) {
-		String email = (String)auth.getPrincipal();
-		reviewService.post(email, form, id);
+		LoginUser user = (LoginUser)auth.getPrincipal();
+		reviewService.post(user, form, id);
 	}
 	
 	@GetMapping("/stylists/{id}/reviews")

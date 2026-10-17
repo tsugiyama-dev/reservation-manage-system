@@ -1,4 +1,4 @@
-package com.example.demo;
+package com.example.demo.domain.entity.impl;
 
 import java.util.HashMap;
 import java.util.List;
@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.example.demo.domain.Status;
-import com.example.demo.domain.entity.impl.ReservationState;
 
 @Component
 public class ReservationStatusResolver {

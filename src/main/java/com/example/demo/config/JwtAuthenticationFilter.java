@@ -31,8 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter{
 
-	SecretKey secretKey;
-	TokenGenerator tokenGenerator;
+	private SecretKey secretKey;
 	
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -48,10 +47,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
 			Jws<Claims> claims = parser.parseSignedClaims(authHeader != null ? authHeader.substring(7) : null); // JWTの検証を行い、期限切れ等の場合は例外を投げる
 			String email = claims.getPayload().getSubject();
 			String role = claims.getPayload().get("role", String.class);
+			long userId = claims.getPayload().get("id", Long.class);
+			
+			LoginUser userInfo = new LoginUser(userId, email);
 
 			SecurityContextHolder.getContext().setAuthentication(
-					UsernamePasswordAuthenticationToken.authenticated(email, null, List.of(new SimpleGrantedAuthority("ROLE_" + role))));
-			log.info("トークンの検証に成功しました:[email={},role={}]", email, role);
+					UsernamePasswordAuthenticationToken.authenticated(userInfo, null, List.of(new SimpleGrantedAuthority("ROLE_" + role))));
+			
 		}catch(JwtException e) {
 			log.info("トークンの検証に失敗:[{}]", e.getMessage());
 		}

@@ -1,112 +1,113 @@
 package com.example.demo.service;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Optional;
+
+import jakarta.annotation.Nullable;
 
 import org.springframework.stereotype.Service;
 
+import com.example.demo.domain.TimeRange;
 import com.example.demo.domain.dto.BusinessHour;
 import com.example.demo.domain.dto.Id;
-import com.example.demo.domain.dto.StylistOriginalMenu;
+import com.example.demo.domain.dto.StylistResponse;
 import com.example.demo.domain.entity.Menu;
 import com.example.demo.domain.entity.Reservation;
 import com.example.demo.domain.entity.Stylist;
-import com.example.demo.domain.entity.StylistMenu;
 import com.example.demo.repository.BusinessHourRepository;
-import com.example.demo.repository.MenuRepository;
 import com.example.demo.repository.ReservationRepository;
 import com.example.demo.repository.StylistMenuRepository;
+import com.example.demo.repository.StylistRepository;
 
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class StylistMenuService {
 
-	private StylistMenuRepository stylistMenuRepository;
-	private MenuRepository menuRepository;
-	private ReservationRepository reservationRepository;
-	private BusinessHourRepository businessHourRepository;
-	
-	public void assignMenu(long stylistId, long menuId, StylistOriginalMenu original) {
-		Id<Menu> id = new Id<>(menuId);
-		Menu m = menuRepository.findById(id).orElseThrow(
-				() -> {
-					throw new IllegalArgumentException("メニューが存在しません。[id=" + menuId + "]");
-				});
-		stylistMenuRepository.insert(
-				new StylistMenu(
-						stylistId,
-						menuId,
-						original.duration_minutes() != null ?
-								original.duration_minutes() :
-									m.getBaseDurationMinutes(),
-						original.price() != null ?
-								original.price() :
-									m.getBasePrice()));
-	}
+	private final StylistMenuRepository stylistMenuRepository;
+	private final ReservationRepository reservationRepository;
+	private final BusinessHourRepository businessHourRepository;
+	private final StylistRepository stylistRepository;
 
 	public List<Menu> getMenuByStylist(long id) {
-		return stylistMenuRepository.findAllByStylistId(new Id<Stylist>(id));
+		return stylistMenuRepository.findAll(new Id<Stylist>(id));
 		
 	}
+	public List<StylistResponse> getStylists() {
+		var users = stylistRepository.findAll();
+		return users.parallelStream().map(user -> new StylistResponse(
+				user.getId(),
+				user.getName(),
+				user.getEmail(),
+				user.getStylist().getBio())).toList();
+	}
 
-	public List<TimeRange> getList(Id<Stylist> sid, LocalDateTime date, Id<Menu> mid) {
+	public List<TimeRange> getAvalilableEmptySlot(
+			Id<Stylist> sid, LocalDateTime targetDate,Id<Menu> mid,  @Nullable Long reservationId) {
 		
-		String dayOfWeek = date.getDayOfWeek().toString().substring(0, 3); // 曜日
-		LocalDate day = LocalDate.of(date.getYear(), date.getMonth(), date.getDayOfMonth()); // 日にち
+	    BusinessHour businessHours = findBusinessHoursById(sid, targetDate);
+		var freeSlots = extractAvailableTimeSlots(
+				                createFreeSlot(businessHours),                 
+				                findStylistReservations(sid, targetDate, reservationId));
+		Menu menu = getMenuById(stylistMenuRepository.findAll(sid), mid);
 		
-		// スタイリストの営業日を取り出す
-		List<BusinessHour> businessDays = businessHourRepository.findById(sid);
-		
-		Optional<BusinessHour> result = businessDays.stream()
-				.filter(b -> b.dayOfWeek().toUpperCase().equals(dayOfWeek)).findFirst();
-		
-		if(result.isEmpty()) {
-			return List.of();
-		}
-		BusinessHour businessHour = result.get();
-		// 初期値は営業開始～営業終了を空き時間としてリストを作成
-		List<TimeRange> freeSlot = new ArrayList<>();
-		freeSlot.add(new TimeRange(LocalTime.parse(businessHour.startTime()),
-				                   LocalTime.parse(businessHour.endTime())));
-		
-		// 予約一覧を取り出す
+		return generateCandidateSlot(freeSlots, menu.getBaseDurationMinutes());
+	}
+	
+	
+	private List<TimeRange> createFreeSlot(BusinessHour date) {
+		LocalTime startTime = LocalTime.parse(date.startTime());
+		LocalTime endTime = LocalTime.parse(date.endTime());
 
-		List<Reservation> reservations = reservationRepository.findByStylistId(
-				sid,
-				day.atTime(LocalTime.parse(businessHour.startTime())),
-				day.atTime(LocalTime.parse(businessHour.endTime()))
-				);
-		
-		// 既存予約を差し引いた残りの空き時間を取り出す
-		for(var reservation : reservations) {
-			freeSlot = subtract(freeSlot
-					, new TimeRange(
-							LocalTime.of(reservation.getStartTime().getHour(), reservation.getStartTime().getMinute()),
-							LocalTime.of(reservation.getEndTime().getHour(), reservation.getEndTime().getMinute())));
-		}
-		
-		Menu menu = getMenu(stylistMenuRepository.findAllByStylistId(sid),mid);
-		log.info("menu={}", menu);
+		return new ArrayList<TimeRange>(List.of(new TimeRange(startTime, endTime)));
+	}
+	private List<TimeRange> generateCandidateSlot(List<TimeRange> freeSlot, int menuDuration) {
 		List<TimeRange> candidate = new ArrayList<>();
 		
 		for(TimeRange free: freeSlot) {
 			LocalTime start = free.getStartTime();
-			while(start.plusMinutes(menu.getBaseDurationMinutes()).isBefore(free.getEndTime()) ||
-					!start.plusMinutes(menu.getBaseDurationMinutes()).isAfter(free.getEndTime())) {
-				candidate.add(new TimeRange(start, start.plusMinutes(menu.getBaseDurationMinutes())));
+			while(!start.plusMinutes(menuDuration).isAfter(free.getEndTime())) {
+				candidate.add(new TimeRange(start, start.plusMinutes(menuDuration)));
 				start = start.plusMinutes(30);
 			}
 		}
 		return candidate;
+	}
+	private BusinessHour findBusinessHoursById(Id<Stylist> sid, LocalDateTime date) {
+		return findWorkingDay(businessHourRepository.findById(sid), date);
+	
+	}
+	
+	private BusinessHour findWorkingDay(List<BusinessHour> businessHoursOfStylist, LocalDateTime date) {
+		return  businessHoursOfStylist.stream()
+				.filter(b -> b.dayOfWeek().toUpperCase().equals(date.getDayOfWeek().toString().subSequence(0, 3)))
+				.findFirst().orElseThrow(() -> new RuntimeException("スタイリストの営業日を確認してください: 日付=" + date));
+	}
+	
+	private List<Reservation> findStylistReservations(
+			Id<Stylist> sid, LocalDateTime targetDate, @Nullable Long reservationId) {
+		LocalDateTime start = targetDate.toLocalDate().atTime(LocalTime.MIN);
+		LocalDateTime end = targetDate.toLocalDate().atTime(LocalTime.MAX);
+		
+		return 	reservationRepository.findByStylistId(sid, start, end, reservationId);
+	}
+	private List<TimeRange> extractAvailableTimeSlots(List<TimeRange> freeSlot, List<Reservation> reservations) {
+		for(var reservation : reservations) {
+			freeSlot = subtract(freeSlot, createTimeRangeFromReservation(reservation));
+		}
+		return freeSlot;
+	}
+	
+	private TimeRange createTimeRangeFromReservation(Reservation reservation) {
+		return new TimeRange(
+				reservation.getStartTime().toLocalTime(),
+				reservation.getEndTime().toLocalTime());
 	}
 	
 	private List<TimeRange> subtract(List<TimeRange> freeSlot,  TimeRange reserve) {
@@ -155,15 +156,9 @@ public class StylistMenuService {
 		}
 		return candidate;
 	}
-	
-	 private Menu getMenu(List<Menu> menus, Id<Menu> menuId) {
-		Optional<Menu> menu = menus.stream().filter(m -> m.getId() == menuId.id()).findFirst();
-		if(menu.isEmpty()) {
-			throw new NoSuchElementException("""
-					指定したメニューはありません
-					再度スタイリストのメニューをご確認ください
-					""");
-		}
-		return menu.get(); 
+	 private Menu getMenuById(List<Menu> menus, Id<Menu> menuId) {
+		return menus.stream().filter(m -> m.getId() == menuId.id()).findFirst()
+				.orElseThrow(() -> new NoSuchElementException("指定されたメニューが見つかりません: メニューID=" + menuId.id()));
+		
 	}
 }

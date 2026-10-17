@@ -14,24 +14,27 @@ public class User {
 	private long id;
 	private String name;
 	private String email;
-	private String password_hash;
+	private String passwordHash;
 	private Role role;
-	private String created_at;
+	private String createdAt;
+	private Stylist stylist;
 	
 	// getters and setters
 	
 	public long getId() {return this.id;}
 	public String getName() {return this.name;}
 	public String getEmail() {return this.email;}
-	public String getPassword_hash() {return this.password_hash;}
+	public String getPasswordHash() {return this.passwordHash;}
 	public Role getRole() {return this.role;}
-	public String getCreatedAt() {return this.created_at;}
+	public String getCreatedAt() {return this.createdAt;}
+	public Stylist getStylist() {return this.stylist;}
 	
 	public void setId(long id) {this.id = id;}
 	public void setName(String name) {this.name = name;}
 	public void setEmail(String email) {this.email = email;}
-	public void setPassword_hash(String password_hash) {this.password_hash = password_hash;}
+	public void setPasswordHash(String passwordHash) {this.passwordHash = passwordHash;}
 	public void setRole(Role role) {this.role = role;}
-	public void setCreatedAt(String created_at) {this.created_at = created_at;}
+	public void setCreatedAt(String createdAt) {this.createdAt = createdAt;}
+	public void setStylist(Stylist stylist) {this.stylist = stylist;}
 }
 	

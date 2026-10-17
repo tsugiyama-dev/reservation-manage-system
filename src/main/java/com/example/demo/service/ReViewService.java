@@ -3,9 +3,11 @@ package com.example.demo.service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.function.Supplier;
 
 import org.springframework.stereotype.Service;
 
+import com.example.demo.config.LoginUser;
 import com.example.demo.domain.Status;
 import com.example.demo.domain.dto.Id;
 import com.example.demo.domain.dto.ReviewPostForm;
@@ -25,13 +27,10 @@ public class ReViewService {
 	private final ReservationRepository reservationRepository;
 	private final ReviewRepository reviewRepository;
 	
-	public void post(String email, ReviewPostForm form, long reservationId) {
+	public void post(LoginUser user, ReviewPostForm form, long reservationId) {
 		
-		Id<Reservation> rid = new Id<>(reservationId);
-		Reservation reservation = reservationRepository.findById(rid).orElseThrow(() -> {
-			throw new NoSuchElementException("予約が見つかりません");
-		});
-		authenticationService.authenticate(email, reservation.getCustomerId());
+		Reservation reservation = getReservation(new Id<Reservation>(reservationId));
+		authenticationService.identify(user, reservation.getCustomerId());
 		
 		boolean isConfirmed = reservation.getStatus().equals(Status.CONFIRMED);
 		if(!isConfirmed) {
@@ -40,11 +39,7 @@ public class ReViewService {
 		if(LocalDateTime.now().isBefore(reservation.getEndTime())) {
 			throw new IllegalStateException("予約時間より前にレビューを投稿することはできません");
 	    }
-		 try {
-			 reviewRepository.insert(reservationId, form);
-		 }catch(Exception e) {
-			 throw new SqlErrorException("レビューは既に投稿されています", e);
-		 }
+		reviewRepository.insert(reservationId, form);
 	}
 
 	public StylistEvaluateResult getReview(long stylistId) {
@@ -57,5 +52,11 @@ public class ReViewService {
 		
 		return result;
 		
+	}
+	private Reservation getReservation(Id<Reservation> rid) {
+		return reservationRepository.findById(rid).orElseThrow(reservationNotFoundSupplier(rid));
+	}
+	private Supplier<NoSuchElementException> reservationNotFoundSupplier(Id<Reservation> rid) {
+		return () -> new NoSuchElementException("予約が見つかりません: 予約ID=" + rid);
 	}
 }

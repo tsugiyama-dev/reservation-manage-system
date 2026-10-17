@@ -4,7 +4,7 @@ package com.example.demo.service;
 import org.springframework.stereotype.Service;
 
 import com.example.demo.domain.dto.Id;
-import com.example.demo.domain.dto.RegisterMenuForm;
+import com.example.demo.domain.dto.MenuRegisterForm;
 import com.example.demo.domain.dto.Response;
 import com.example.demo.domain.entity.Menu;
 import com.example.demo.repository.MenuRepository;
@@ -19,11 +19,8 @@ public class MenuRegisterService {
 	
 	MenuRepository menuRepository;
 	
-	public Response<Menu> registerMenu(RegisterMenuForm form) {	
-		menuRepository.insert(form);
-	   Menu menu =  menuRepository.findByName(form.name());
-	   log.info("{}", menu);
-	   return new Response<>(menu);
+	public Response<Menu> registerMenu(MenuRegisterForm form) {	
+		return null;
 	}
 	
 	public Menu getMenu(Id<Menu> menuId) {
@@ -36,7 +33,7 @@ public class MenuRegisterService {
 	public void deleteMenu(Id<Menu> id) {
 		menuRepository.delete(id);
 	}
-	public void updateMenu(RegisterMenuForm menu) {
+	public void updateMenu(MenuRegisterForm menu) {
 		menuRepository.update(menu);
 	}
 

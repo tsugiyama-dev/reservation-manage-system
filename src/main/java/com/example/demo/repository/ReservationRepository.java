@@ -6,6 +6,7 @@ import java.util.Optional;
 
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Options;
 import org.apache.ibatis.annotations.Result;
 import org.apache.ibatis.annotations.ResultMap;
 import org.apache.ibatis.annotations.Results;
@@ -14,7 +15,6 @@ import org.apache.ibatis.annotations.Update;
 
 import com.example.demo.domain.Status;
 import com.example.demo.domain.dto.Id;
-import com.example.demo.domain.entity.Menu;
 import com.example.demo.domain.entity.Reservation;
 import com.example.demo.domain.entity.Stylist;
 import com.example.demo.domain.entity.User;
@@ -33,26 +33,33 @@ public interface ReservationRepository {
 			@Result(property = "status", column = "status"),
 	})
 	@Select("""
-			SELECT 
-			       id,
-			       customer_id,
-			       stylist_id,
-			       menu_id,
-			       start_time,
-			       end_time,
-			       status
-			FROM reservations
-			WHERE stylist_id = #{stylist.id} AND
-			      start_time >= #{startTime} AND
-			      end_time <= #{endTime} AND
-			      status IN ('PENDING', 'CONFIRMED')
-		    ORDER BY start_time ASC
+			<script>
+				SELECT 
+				       id,
+				       customer_id,
+				       stylist_id,
+				       menu_id,
+				       start_time,
+				       end_time,
+				       status
+				FROM reservations
+				WHERE stylist_id = #{stylist.id} AND
+				      start_time &gt;= #{startTime} AND
+				      end_time &lt;= #{endTime} AND
+				      status IN ('PENDING', 'CONFIRMED')
+				      <if test="reservationId != null">
+				        AND id != #{reservationId}
+				      </if>
+			    ORDER BY start_time ASC
+			</script>
 			""")
 	List<Reservation> findByStylistId(
 			Id<Stylist> stylist,
 			LocalDateTime startTime,
-			LocalDateTime endTime);
+			LocalDateTime endTime,
+			Long reservationId);
 
+	@Options(useGeneratedKeys = true, keyProperty = "id")
 	@Insert("""
 			INSERT INTO reservations (
 			    customer_id,
@@ -60,28 +67,39 @@ public interface ReservationRepository {
 			    menu_id,
 			    start_time,
 			    end_time,
-			    status,
-			    created_at)
+			    status)
 			VALUES (
-			    #{cid.id},
-			    #{sid.id},
-			    #{mid.id},
+			    #{customerId},
+			    #{stylistId},
+			    #{menuId},
 			    #{startTime},
 			    #{endTime},
-			    #{status},
-			    #{now})
+			    #{status})
 			""")
-	void insert(Id<User> cid, Id<Stylist> sid, Id<Menu> mid,
-			LocalDateTime startTime, LocalDateTime endTime, Status status, LocalDateTime now);
+	void insert(Reservation reservation);
 	
 	@ResultMap(value = "reservationResultMap")
 	@Select("SELECT * FROM reservations WHERE id = #{id}")
 	Optional<Reservation> findById(Id<Reservation> rid);
 
 	@Update("""
-			UPDATE reservations SET status = #{status} WHERE id = #{id}
+			<script>
+			  UPDATE reservations 
+			  <set>
+			      <if test="status != null">
+				    status = #{status},
+			      </if>
+			      <if test="startTime != null">
+			        start_Time = #{startTime},
+			      </if>
+			      <if test="endTime != null">
+			        end_Time = #{endTime}
+			      </if>
+			  </set>
+			  WHERE id = #{id}
+		    </script>
 			""")
-	void update(Reservation reservation);
+	int update(Reservation reservation);
 
 	@ResultMap(value = "reservationResultMap")
 	@Select("""

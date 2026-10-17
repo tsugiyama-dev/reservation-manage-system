@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.demo.config.LoginUser;
 import com.example.demo.domain.Status;
 import com.example.demo.domain.entity.Reservation;
 import com.example.demo.service.StylistService;
@@ -30,23 +31,23 @@ public class StylistController {
 			@RequestParam Status status,
 			Authentication auth) {
 		
-		String email = (String) auth.getPrincipal();
-		return stylistService.getList(status, email);
+		LoginUser user = (LoginUser)auth.getPrincipal();
+		return stylistService.getReservations(status, user);
 	}
 	
 	@PatchMapping("/{id}/confirm")
 	public void reservationConfirm(
 			@PathVariable long id,
 			Authentication auth) {
-		String email = (String)auth.getPrincipal();
-		stylistService.confirm(id, email);
+		LoginUser user = (LoginUser)auth.getPrincipal();
+		stylistService.confirm(id, user);
 	}
 	
 	@PatchMapping("/{id}/reject")
 	public void reservationReject(
 			@PathVariable long id,
 			Authentication auth) {
-		String email = (String)auth.getPrincipal();
-		stylistService.reject(id, email);
+		LoginUser user = (LoginUser)auth.getPrincipal();
+		stylistService.reject(id, user);
 	}
 }

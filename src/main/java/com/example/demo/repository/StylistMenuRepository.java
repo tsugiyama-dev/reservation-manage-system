@@ -49,6 +49,6 @@ public interface StylistMenuRepository {
 			ON sm.menu_id = m.id
 			WHERE sm.stylist_id = #{id}
 			""")
-	List<Menu> findAllByStylistId(Id<Stylist> id);
+	List<Menu> findAll(Id<Stylist> id);
 	
 }

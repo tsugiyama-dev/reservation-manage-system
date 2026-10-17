@@ -8,66 +8,52 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.example.demo.ReservationStatusResolver;
+import com.example.demo.config.LoginUser;
 import com.example.demo.domain.Status;
 import com.example.demo.domain.dto.Id;
 import com.example.demo.domain.entity.Reservation;
 import com.example.demo.domain.entity.User;
-import com.example.demo.domain.entity.impl.ReservationState;
+import com.example.demo.domain.entity.impl.ReservationStatusResolver;
 import com.example.demo.repository.ReservationRepository;
-import com.example.demo.repository.UserRepository;
 
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 @Slf4j
 public class StylistService {
 
 	private final ReservationStatusResolver resolver;
-	private final UserRepository userRepository;
 	private final AuthenticationService authenticationService;
 	private final ReservationRepository reservationRepository;
 	private final ApplicationEventPublisher eventPublisher;
 	
 	@Transactional
-	public void confirm(long reservationId, String email) {
+	public void confirm(long reservationId, LoginUser user) {
 		
 		Reservation reservation = getReservation(new Id<Reservation>(reservationId));
-
-		authenticationService.authenticate(email, reservation.getStylistId());	
-
-		ReservationState state = resolver.getInstance(reservation.getStatus());
-		state.set(reservation);
-		state.confirm();
-		
+		authenticationService.identify(user, reservation.getStylistId());	
+		resolver.getInstance(reservation.getStatus()).confirm(reservation);
 		reservationRepository.update(reservation);
 		
 		eventPublisher.publishEvent(reservation);
 	}
 	
 	@Transactional
-	public void reject(long reservationId, String email) {
+	public void reject(long reservationId, LoginUser user) {
 		
 		Reservation reservation = getReservation(new Id<Reservation>(reservationId));
-
-		authenticationService.authenticate(email, reservation.getStylistId());	
-
-		var status = resolver.getInstance(reservation.getStatus());
-		status.set(reservation);
-		status.reject();
+		authenticationService.identify(user, reservation.getStylistId());	
+		resolver.getInstance(reservation.getStatus()).reject(reservation);
 		reservationRepository.update(reservation);
 		
 		eventPublisher.publishEvent(reservation);
-		
 	}
 
-	public List<Reservation> getList(Status status, String email) {
-		User user = userRepository.findByEmail(email).orElseThrow(() -> {
-			throw new IllegalArgumentException("見つかりません:[email=" + email + "]");
-		});
-		return reservationRepository.findByStatus(new Id<User>(user.getId()), status);
+	public List<Reservation> getReservations(Status status, LoginUser user) {
+		
+		return reservationRepository.findByStatus(new Id<User>(user.id()), status);
 		
 	}
 	private Reservation getReservation(Id<Reservation> rid) {

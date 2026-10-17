@@ -12,6 +12,7 @@ import org.apache.ibatis.annotations.Select;
 
 import com.example.demo.domain.dto.Id;
 import com.example.demo.domain.entity.Stylist;
+import com.example.demo.domain.entity.User;
 
 @Mapper
 public interface StylistRepository {
@@ -23,8 +24,7 @@ public interface StylistRepository {
 	
 	@Insert("""
 			  INSERT INTO stylists (user_id, bio)
-			  VALUES
-		        (#{userId}, #{bio})
+			  VALUES (#{userId}, #{bio})
 			""")
 	void insert(long userId, String bio);
 	
@@ -35,17 +35,29 @@ public interface StylistRepository {
 	void delete(Id<Stylist> id);
 	
 	@Results(value = {
-			@Result(property = "userId", column = "id"),
+			@Result(property = "id", column = "id"),
 			@Result(property = "name", column = "name"),
 			@Result(property = "email", column = "email"),
-			@Result(property = "bio", column = "bio")
+			@Result(property = "passwordHash", column = "password_hash"),
+			@Result(property = "role", column = "role"),
+			@Result(property = "createdAt", column = "created_at"),
+			
+			@Result(property = "stylist.bio", column = "bio")
 	})
 	@Select("""
-			SELECT u.id, u.name, u.email, s.bio
+			SELECT 
+			      u.id,
+			      u.name,
+			      u.email,
+			      u.password_hash,
+			      u.role,
+			      u.created_at,
+			      s.bio
 			FROM stylists s
 			LEFT JOIN users u
-			  ON u.id = s.user_id
+			  ON s.user_id = u.id
+			WHERE role = "STYLIST"
 			""")
-	List<Stylist> findAll();
+	List<User> findAll();
 
 }

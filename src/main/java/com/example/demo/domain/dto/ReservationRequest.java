@@ -6,5 +6,8 @@ public record ReservationRequest<S, M>(
 		Id<S> stylistId,
 		LocalDateTime date,
 		Id<M> menuId) {
+	public ReservationRequest(LocalDateTime date) {
+		this(null, date, null);
+	}
 
 }
