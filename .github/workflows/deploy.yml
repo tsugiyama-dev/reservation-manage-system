@@ -1,5 +1,6 @@
 name: Build and Push to ECR
 
+
 on:
   push:
     branches:
@@ -81,3 +82,7 @@ jobs:
           cluster: ${{ env.ECS_CLUSTER }}
           wait-for-service-stability: true
           wait-max-delay-seconds: 15
+      - name: Build and test
+        env:
+          SECRET_KEY: "ci-test-only-signing-key-0123456789abcdef"
+        run: ./mvnw -B clean verify
