@@ -26,13 +26,11 @@ public class AuthenticationService {
 	
 	public  User authenticate(LoginForm form) {
 		User user = userRepository.findByEmail(form.email()).orElseGet(() -> {
-			log.info("ユーザーが見つかりません : email = {}", form.email());
 			throw new NoSuchElementException("ユーザーが見つかりません");
 		});
-		if(!passwordEncoder.matches(form.password(), user.getPasswordHash())) {
-			log.info("パスワードが一致しません : email = {}", form.email());
+		if(!passwordEncoder.matches(form.password(), user.getPasswordHash())) 
 			throw new AccessDeniedException("パスワードが一致しません");
-		};
+		
 		return user;
 	}
 	

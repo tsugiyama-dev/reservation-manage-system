@@ -1,6 +1,5 @@
 package com.example.demo.service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.function.Supplier;
@@ -17,11 +16,11 @@ import com.example.demo.domain.entity.Stylist;
 import com.example.demo.repository.ReservationRepository;
 import com.example.demo.repository.ReviewRepository;
 
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 
 @Service
-@AllArgsConstructor
-public class ReViewService {
+@RequiredArgsConstructor
+public class ReviewService {
 
 	private final AuthenticationService authenticationService;
 	private final ReservationRepository reservationRepository;
@@ -31,14 +30,9 @@ public class ReViewService {
 		
 		Reservation reservation = getReservation(new Id<Reservation>(reservationId));
 		authenticationService.identify(user, reservation.getCustomerId());
-		
-		boolean isConfirmed = reservation.getStatus().equals(Status.CONFIRMED);
-		if(!isConfirmed) {
-			throw new IllegalStateException("確定されたステータス以外は投稿できません");
-			}
-		if(LocalDateTime.now().isBefore(reservation.getEndTime())) {
-			throw new IllegalStateException("予約時間より前にレビューを投稿することはできません");
-	    }
+	
+		if(!reservation.getStatus().equals(Status.COMPLETED))
+			throw new IllegalStateException("statusがCOMPLETEDのみレビューを投稿できます");
 		reviewRepository.insert(reservationId, form);
 	}
 

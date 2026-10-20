@@ -34,6 +34,7 @@ import com.example.demo.domain.entity.Menu;
 import com.example.demo.domain.entity.Reservation;
 import com.example.demo.domain.entity.Stylist;
 import com.example.demo.domain.entity.impl.CancelState;
+import com.example.demo.domain.entity.impl.CompleteState;
 import com.example.demo.domain.entity.impl.ConfirmState;
 import com.example.demo.domain.entity.impl.PendingState;
 import com.example.demo.domain.entity.impl.RejectState;
@@ -196,6 +197,7 @@ class ReservationServiceTest {
 		static Stream<Arguments> cancelパラメータ() {
 			return Stream.of(
 					Arguments.of(Status.CANCELLED, new CancelState()),
+					Arguments.of(Status.COMPLETED, new CompleteState()),
 					Arguments.of(Status.REJECTED, new RejectState()));
 		}
 	}
@@ -244,7 +246,8 @@ class ReservationServiceTest {
 				
 			}
 			static Stream<Arguments> changeパラメータ() {
-				return Stream.of(Arguments.of(Status.PENDING, new  PendingState()),
+				return Stream.of(
+						Arguments.of(Status.PENDING, new  PendingState()),
 						Arguments.of(Status.CONFIRMED, new ConfirmState()));
 			}
 		}
@@ -388,7 +391,9 @@ class ReservationServiceTest {
 			
 		}
 		static Stream<Arguments> changeできない状態パラメータ() {
-			return Stream.of(Arguments.of(Status.CANCELLED, new  CancelState()),
+			return Stream.of(
+					Arguments.of(Status.CANCELLED, new  CancelState()),
+					Arguments.of(Status.COMPLETED, new  CompleteState()),
 					Arguments.of(Status.REJECTED, new RejectState()));
 		}
 	}

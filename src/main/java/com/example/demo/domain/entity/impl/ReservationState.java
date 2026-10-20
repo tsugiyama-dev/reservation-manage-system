@@ -4,20 +4,22 @@ import com.example.demo.domain.Status;
 import com.example.demo.domain.entity.Reservation;
 
 public sealed interface ReservationState 
-           permits ConfirmState, RejectState, CancelState, PendingState {
+           permits ConfirmState, RejectState, CancelState, PendingState, CompleteState {
 	
 	default void confirm(Reservation reservation) {
-		throw new IllegalStateException("PENDINGのみ変更可能です");
+		throw new IllegalStateException("不正な状態遷移です");
 	};
 	default void reject(Reservation reservation) {
-		throw new IllegalStateException("PENDINGのみ変更可能です");
+		throw new IllegalStateException("不正な状態遷移です");
 	};
 	default void cancel(Reservation reservation) {
-		throw new IllegalStateException("CONFIRMのみ変更可能です");
+		throw new IllegalStateException("不正な状態遷移です");
 	};
 	default void pending(Reservation reservation) {
 		throw new IllegalStateException("不正な状態遷移です");
-		
+	}
+	default void complete(Reservation reservation) {
+		throw new IllegalStateException("不正な状態遷移です");
 	}
 	Status getKey();
 	

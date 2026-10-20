@@ -1,5 +1,7 @@
 package com.example.demo.service;
 
+import java.time.Clock;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -28,6 +30,7 @@ public class StylistService {
 	private final AuthenticationService authenticationService;
 	private final ReservationRepository reservationRepository;
 	private final ApplicationEventPublisher eventPublisher;
+	private final Clock clock;
 	
 	@Transactional
 	public void confirm(long reservationId, LoginUser user) {
@@ -55,6 +58,19 @@ public class StylistService {
 		
 		return reservationRepository.findByStatus(new Id<User>(user.id()), status);
 		
+	}
+	@Transactional
+	public void complete(long reservationId, LoginUser user) {
+		Reservation reservation = getReservation(new Id<Reservation>(reservationId));
+		authenticationService.identify(user, reservation.getStylistId());
+		
+		if(LocalDateTime.now(clock).isBefore(reservation.getEndTime())) {
+			throw new IllegalStateException("予約時間より前にステータスを変更できません");
+		}
+		resolver.getInstance(reservation.getStatus()).complete(reservation);
+		reservationRepository.update(reservation);
+		
+		eventPublisher.publishEvent(reservation);
 	}
 	private Reservation getReservation(Id<Reservation> rid) {
 		Optional<Reservation> reservation = reservationRepository.findById(rid);

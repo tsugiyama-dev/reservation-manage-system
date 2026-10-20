@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.demo.config.LoginUser;
 import com.example.demo.domain.dto.ReviewPostForm;
-import com.example.demo.service.ReViewService;
+import com.example.demo.service.ReviewService;
 import com.example.demo.service.StylistEvaluateResult;
 
 import lombok.AllArgsConstructor;
@@ -20,7 +20,7 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class ReviewPostController {
 
-	ReViewService reviewService;
+	ReviewService reviewService;
 	
 	@PostMapping("/reservations/{id}/review")
 	public void post(@RequestBody @Valid ReviewPostForm form,

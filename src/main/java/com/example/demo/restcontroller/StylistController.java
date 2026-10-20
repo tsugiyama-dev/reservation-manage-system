@@ -50,4 +50,12 @@ public class StylistController {
 		LoginUser user = (LoginUser)auth.getPrincipal();
 		stylistService.reject(id, user);
 	}
+	@PatchMapping("/{id}/complete")
+	public void reservationComplete(
+			@PathVariable long id,
+			Authentication auth) {
+		LoginUser user = (LoginUser) auth.getPrincipal();
+		stylistService.complete(id, user);
+		
+	}
 }

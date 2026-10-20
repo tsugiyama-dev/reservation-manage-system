@@ -39,14 +39,23 @@ public class MailNotification {
 		String startTime = reservation.getStartTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
 		String endTime = reservation.getEndTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
 		SimpleMailMessage message = new SimpleMailMessage();
-		String text = """
-				以下の日時の予約が%sされました。
-				開始時間：%s
-				終了予定時刻:%s
+		
+		String text = switch(reservation.getStatus().name()) {
+		   case "CONFIRMED", "CANCELLED" -> """
+					以下の日時の予約が%sされました。
+					開始時間：%s
+					終了予定時刻:%s
+					
+					""".formatted(status.equals("CONFIRMED") ? "確定" : "キャンセル"
+						        , startTime
+						        , endTime);
+		   case "COMPLETED" -> """
+		   	    本日はご来店いただきありがとうございました。
+		   	    レビューを投稿して応援しましょう
+		   		""";
+		   default -> throw new IllegalStateException("不正な状態遷移です");
+		};
 				
-				""".formatted(status.equals("CONFIRMED") ? "確定" : "キャンセル"
-					        , startTime
-					        , endTime);
 		message.setSubject("美容室の予約について");
 		message.setText(text);
 		message.setFrom("sender_exclusive@example.com");

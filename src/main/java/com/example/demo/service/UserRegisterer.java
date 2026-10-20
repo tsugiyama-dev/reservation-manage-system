@@ -1,5 +1,7 @@
 package com.example.demo.service;
 
+import java.util.List;
+
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -26,6 +28,8 @@ public class UserRegisterer {
     
 	public void registerCustomer(UserRegisterForm form) {
 					
+		if(List.of(Role.STYLIST, Role.ADMIN).contains(form.role()))
+			throw new IllegalArgumentException("リクエストが不正です.role="+ form.role() + "は管理者のみ登録可能です");
 	    User user = new User();
 	    user.setEmail(form.email());
 	    user.setName(form.username());

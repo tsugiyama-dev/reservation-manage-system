@@ -21,4 +21,8 @@ public final class ConfirmState implements ReservationState {
 	public void cancel(Reservation reservation) {
 		reservation.setStatus(Status.CANCELLED);
 	}
+	@Override
+	public void complete(Reservation reservation) {
+		reservation.setStatus(Status.COMPLETED);
+	}
 }
